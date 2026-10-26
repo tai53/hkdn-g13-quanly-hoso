@@ -1,4 +1,4 @@
-# HKDN - Nhóm G13 - Hệ thống quản lý vụ việc và hồ sơ nghiệp vụ
+# HKDN - Nhóm Nguyễn Thị Hoài Linh - Đề tài G1.3 - Hệ thống quản lý vụ việc và hồ sơ nghiệp vụ
 
 ## Thành viên
 | Họ tên | GitHub | Vai trò |
