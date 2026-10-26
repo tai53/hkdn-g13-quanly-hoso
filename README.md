@@ -2,7 +2,7 @@
 
 ## Thành viên
 | Họ tên | GitHub | Vai trò |
-|---|---|
+|---|---|---|
 | Nguyễn Thị Hoài Linh | @Nguyenthlinh | Nhóm trưởng |
 | Nguyễn Thành Nam | @NgNam101 | Thành viên |
 | Trần Tấn Tài | @tai53 | Thành viên |
