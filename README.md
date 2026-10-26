@@ -6,8 +6,8 @@
 | Nguyễn Thị Hoài Linh | @Nguyenthlinh | Nhóm trưởng |
 | Nguyễn Thành Nam | @NgNam101 | Thành viên |
 | Trần Tấn Tài | @tai53 | Thành viên |
-| Nguyễn Công Trường | @... | Thành viên |
-| Võ Thành Đạt | @... | Thành viên |
+| Nguyễn Công Trường | @TheBlueStars | Thành viên |
+| Võ Thành Đạt | @datwebdev23 | Thành viên |
 
 ## Quy ước làm việc
 - Nhánh chính: `main`, không commit trực tiếp.
