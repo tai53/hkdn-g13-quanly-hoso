@@ -1,13 +1,13 @@
 # HKDN - Nhóm G13 - Hệ thống quản lý vụ việc và hồ sơ nghiệp vụ
 
 ## Thành viên
-| Họ tên| Vai trò |
+| Họ tên | GitHub | Vai trò |
 |---|---|
-| Nguyễn Thị Hoài Linh | Nhóm trưởng |
-| Nguyễn Thành Nam | Thành viên |
-| Trần Tấn Tài | Thành viên |
-| Nguyễn Công Trường | Thành viên |
-| Võ Thành Đạt | Thành viên |
+| Nguyễn Thị Hoài Linh | @Nguyenthlinh | Nhóm trưởng |
+| Nguyễn Thành Nam | @NgNam101 | Thành viên |
+| Trần Tấn Tài | @tai53 | Thành viên |
+| Nguyễn Công Trường | @... | Thành viên |
+| Võ Thành Đạt | @... | Thành viên |
 
 ## Quy ước làm việc
 - Nhánh chính: `main`, không commit trực tiếp.
