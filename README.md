@@ -14,4 +14,4 @@
 - Mỗi việc làm trên một nhánh riêng: `feature/ten-chuc-nang`, `fix/ten-loi`.
 - Mọi thay đổi vào `main` phải qua Pull Request.
 - Người review: @username. Người merge: @username.
-- Commit message ngắn gọn, nói rõ thay đổi gì.
+- Commit rõ chi tiết những gì đã làm trên branch trước khi gửi merge request.
