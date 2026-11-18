@@ -1,3 +1,6 @@
+
+
+
 # HKDN - Nhóm Nguyễn Thị Hoài Linh - Đề tài G1.3 - Hệ thống quản lý vụ việc và hồ sơ nghiệp vụ
 
 ## Thành viên
@@ -162,3 +165,5 @@ docker compose down                # Dừng (giữ dữ liệu)
 Người review: @TheBlueStars. Người merge: @TheBlueStars.
 
 Commit rõ chi tiết những gì đã làm trên branch trước khi gửi merge request.
+- Người review: @TheBlueStars. Người merge: @TheBlueStars.
+- Commit message ngắn gọn, nói rõ thay đổi gì.
