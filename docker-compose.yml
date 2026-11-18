@@ -1,0 +1,73 @@
+# Tất cả biến dưới đây dùng cú pháp ${VAR:?...} nên BẮT BUỘC phải có file .env
+# ở thư mục gốc (ngang hàng file này). Thiếu .env, docker compose sẽ báo lỗi và dừng.
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: qlhs_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:?chưa có file .env ở thư mục gốc project}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?chưa có file .env ở thư mục gốc project}
+      POSTGRES_DB: ${DB_NAME:?chưa có file .env ở thư mục gốc project}
+    ports:
+      - "${DB_PORT:?chưa có file .env ở thư mục gốc project}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:?chưa có file .env} -d ${DB_NAME:?chưa có file .env}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: qlhs_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:?chưa có file .env ở thư mục gốc project}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?chưa có file .env ở thư mục gốc project}
+    ports:
+      - "${PGADMIN_PORT:?chưa có file .env ở thư mục gốc project}:80"
+    depends_on:
+      - db
+    profiles: ["tools"]
+
+  backend:
+    build: ./backend
+    container_name: qlhs_backend
+    restart: unless-stopped
+    environment:
+      PORT: 5000
+      NODE_ENV: ${NODE_ENV:?chưa có file .env ở thư mục gốc project}
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:?chưa có file .env ở thư mục gốc project}
+      DB_PASSWORD: ${DB_PASSWORD:?chưa có file .env ở thư mục gốc project}
+      DB_NAME: ${DB_NAME:?chưa có file .env ở thư mục gốc project}
+      CORS_ORIGIN: http://localhost:${FRONTEND_PORT:?chưa có file .env ở thư mục gốc project}
+    ports:
+      - "${BACKEND_PORT:?chưa có file .env ở thư mục gốc project}:5000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    container_name: qlhs_frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://localhost:${BACKEND_PORT:?chưa có file .env ở thư mục gốc project}/api
+    ports:
+      - "${FRONTEND_PORT:?chưa có file .env ở thư mục gốc project}:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
