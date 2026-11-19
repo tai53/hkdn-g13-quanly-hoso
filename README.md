@@ -1,7 +1,14 @@
-
-
-
 # HKDN - Nhóm Nguyễn Thị Hoài Linh - Đề tài G1.3 - Hệ thống quản lý vụ việc và hồ sơ nghiệp vụ
+
+> **Ngôn ngữ lập trình đang sử dụng: JavaScript** (chưa dùng TypeScript)
+
+| Phần | Ngôn ngữ | Chuẩn module | Đuôi file |
+|---|---|---|---|
+| Frontend | JavaScript + JSX (React 18, Vite) | ES Modules (`import` / `export`) | `.js`, `.jsx` |
+| Backend | JavaScript (Node.js 22, Express) | CommonJS (`require` / `module.exports`) | `.js` |
+| Database | SQL (PostgreSQL 16) | | `.sql` |
+
+Khi viết code mới, dùng đúng ngôn ngữ và chuẩn module như bảng trên. Nếu nhóm thống nhất chuyển sang TypeScript, cập nhật lại mục này.
 
 ## Thành viên
 | Họ tên | GitHub | Vai trò |
@@ -16,6 +23,7 @@
 - Nhánh chính: `main`, không commit trực tiếp.
 - Mỗi việc làm trên một nhánh riêng: `feature/ten-chuc-nang`, `fix/ten-loi`.
 - Mọi thay đổi vào `main` phải qua Pull Request.
+
 ## Công nghệ sử dụng
 | Thành phần | Công nghệ |
 |---|---|
@@ -64,7 +72,8 @@ hkdn-g13-quanly-hoso/
 │       └── 02_seed.sql       # Dữ liệu mẫu
 │
 └── docs/
-    └── HUONG_DAN_CAI_DAT.md  # Hướng dẫn cài đặt, chạy chi tiết
+    ├── HUONG_DAN_CAI_DAT.md  # Hướng dẫn cài đặt, chạy chi tiết
+    └── images/               # Ảnh mẫu kết quả kiểm tra (DB, backend, frontend)
 ```
 
 > 📖 **Hướng dẫn chi tiết từng bước** (cài phần mềm, clone, cấu hình `.env`, chạy, pull code mới, xử lý lỗi): xem [docs/HUONG_DAN_CAI_DAT.md](docs/HUONG_DAN_CAI_DAT.md). Phần dưới đây là tóm tắt nhanh.

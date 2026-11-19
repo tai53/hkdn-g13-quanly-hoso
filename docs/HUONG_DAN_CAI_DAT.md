@@ -304,6 +304,21 @@ Mở http://localhost:5173.
    Thay `postgres` và `quanly_hoso` bằng `DB_USER` và `DB_NAME` trong `.env` nếu bạn đã đổi.
    Trong `psql`: gõ `\dt` để xem bảng, `SELECT * FROM vu_viec;` để xem dữ liệu, `\q` để thoát.
 
+### Ảnh mẫu kết quả đúng
+Ảnh chụp lúc kiểm tra thực tế (Windows 11, Docker 29.9.3, chạy bằng `docker compose up -d --build`). Kết quả trên máy bạn phải tương tự.
+
+**Kết nối database thành công:** `qlhs_db` ở trạng thái `healthy`, log backend báo `[DB] Kết nối PostgreSQL thành công`, database có 3 bảng và dữ liệu mẫu.
+
+![Kết nối database thành công](images/1-ket-noi-database.jpg)
+
+**Backend chạy được:** `/api/health` trả `200` với `"database":"connected"`, `/api/vu-viec` trả dữ liệu, frontend được phép gọi API (CORS).
+
+![Backend API chạy được](images/2-backend-api.jpg)
+
+**Frontend chạy được và gọi được backend:** http://localhost:5173 hiện `API: ok · DB: connected` và danh sách 2 vụ việc mẫu.
+
+![Frontend chạy được](images/3-frontend.jpg)
+
 ---
 
 ## 7. Pull code mới và chạy lại
