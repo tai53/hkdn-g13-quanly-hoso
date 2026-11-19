@@ -5,7 +5,7 @@ Tài liệu này hướng dẫn từng bước, từ lúc chưa có gì trên m�
 **Mục lục**
 1. [Cài phần mềm cần thiết](#1-cài-phần-mềm-cần-thiết)
 2. [Clone source code về máy](#2-clone-source-code-về-máy)
-3. [Chuẩn bị file cấu hình môi trường (.env)](#3-chuẩn-bị-file-cấu-hình-môi-trường-env)
+3. [Chuẩn bị file cấu hình môi trường (.env)](#3-chuẩn-bị-file-cấu-hình-môi-trường-env): sao chép `.env.example` thành `.env`
 4. [Chạy dự án — Cách A: toàn bộ bằng Docker (khuyến nghị)](#4-cách-a--chạy-toàn-bộ-bằng-docker-khuyến-nghị)
 5. [Chạy dự án — Cách B: DB bằng Docker, FE/BE chạy trên máy](#5-cách-b--db-bằng-docker-febe-chạy-trên-máy)
 6. [Kiểm tra hệ thống đã chạy đúng](#6-kiểm-tra-hệ-thống-đã-chạy-đúng)
@@ -100,39 +100,87 @@ code .
 
 ## 3. Chuẩn bị file cấu hình môi trường (.env)
 
-File `.env` chứa mật khẩu và cấu hình riêng của từng máy nên **không có sẵn trong Git**. Xin file này từ thành viên trong nhóm (qua chat/Drive riêng) rồi đặt vào **thư mục gốc của project** (ngang hàng với `docker-compose.yml`).
+Toàn bộ cấu hình nằm trong **một file `.env` duy nhất ở thư mục gốc** (ngang hàng `docker-compose.yml`). Không cần tạo `.env` trong `backend/` hay `frontend/`.
 
-Chỉ cần **duy nhất 1 file `.env` ở thư mục gốc** — không cần tạo thêm trong `backend/` hay `frontend/`. File này được dùng cho cả 2 cách chạy:
-
-| Thành phần | Cách đọc file `.env` gốc |
-|---|---|
-| docker-compose | Đọc tự động |
-| backend | `backend/src/config/env.js` đọc file `.env` ở gốc và kiểm tra đủ biến |
-| frontend | `frontend/vite.config.js` dùng `loadEnv` + `envDir` trỏ về thư mục gốc |
-
-Giá trị mặc định đã chạy được ngay, thường **không cần sửa gì**. Chỉ sửa khi bị trùng cổng (xem [mục 10](#10-xử-lý-lỗi-thường-gặp)).
-
-> **File `.env` là bắt buộc, không có thì dự án không chạy.** Không còn giá trị mặc định ẩn — thiếu file này cả 3 thành phần đều dừng ngay kèm thông báo chỉ rõ biến nào thiếu:
->
-> | Lệnh | Thông báo khi thiếu `.env` |
-> |---|---|
-> | `docker compose up -d` | `required variable DB_USER is missing a value: chưa có file .env ở thư mục gốc project` |
-> | `npm run dev` trong `backend/` | `[CẤU HÌNH] Không thể khởi động backend: thiếu biến môi trường.` → `exit 1` |
-> | `npm run dev` trong `frontend/` | `[CẤU HÌNH] Thiếu biến VITE_API_URL.` → Vite không khởi động |
->
-> Thấy một trong các lỗi trên nghĩa là bạn chưa đặt file `.env` vào thư mục gốc.
-
-Ý nghĩa các biến chính:
-
-| Biến | Mặc định | Ý nghĩa |
+| File | Có trên Git? | Vai trò |
 |---|---|---|
-| `DB_USER` / `DB_PASSWORD` | `postgres` / `postgres` | Tài khoản PostgreSQL |
-| `DB_NAME` | `quanly_hoso` | Tên database |
-| `DB_PORT` | `5432` | Cổng PostgreSQL trên máy |
-| `BACKEND_PORT` | `5000` | Cổng API |
-| `FRONTEND_PORT` | `5173` | Cổng giao diện web |
-| `DB_HOST` | `localhost` | Để `localhost` khi chạy BE trên máy. Khi chạy trong Docker, compose tự đặt là `db` |
-| `VITE_API_URL` | `http://localhost:5000/api` | Địa chỉ API mà giao diện gọi tới |
+| `.env.example` | **Có** | File mẫu, liệt kê đầy đủ các biến cần thiết. Không chứa mật khẩu thật |
+| `.env` | **Không** (bị `.gitignore` chặn) | File cấu hình thật trên máy bạn, chứa mật khẩu của bạn |
+
+### 3.1. Tạo file `.env` từ file mẫu
+Đứng ở thư mục gốc project:
+
+**Git Bash / macOS / Linux:**
+```bash
+cp .env.example .env
+```
+**PowerShell:**
+```powershell
+Copy-Item .env.example .env
+```
+
+### 3.2. Điền thông tin của bạn
+Mở file `.env` bằng VS Code và sửa:
+
+| Biến | Có cần sửa? | Điền gì |
+|---|---|---|
+| `DB_PASSWORD` | **Nên sửa** | Mật khẩu tự đặt cho PostgreSQL trên máy bạn |
+| `PGADMIN_PASSWORD` | **Nên sửa** | Mật khẩu tự đặt để đăng nhập pgAdmin |
+| `DB_PORT` | Chỉ khi trùng cổng | Đổi thành `5433` nếu máy đã cài sẵn PostgreSQL |
+| `BACKEND_PORT`, `FRONTEND_PORT` | Chỉ khi trùng cổng | Cổng mở ra máy khi chạy bằng Docker |
+| Các biến còn lại | Không | Giữ nguyên giá trị mẫu |
+
+> - **Không commit `.env`** và không gửi file này lên nhóm chat. Mỗi người tự tạo `.env` của riêng mình từ `.env.example`.
+> - Mật khẩu là của database **trên máy bạn**, không cần giống người khác trong nhóm.
+> - **Đặt mật khẩu trước lần chạy đầu tiên.** PostgreSQL chỉ áp dụng `DB_USER`, `DB_PASSWORD`, `DB_NAME` lúc tạo database lần đầu. Đổi sau đó phải tạo lại DB ([mục 9.3](#93-tạo-lại-database-từ-đầu-xóa-toàn-bộ-dữ-liệu)).
+> - Khi pull code mới mà `.env.example` có thêm biến, hãy chép biến đó sang `.env` của bạn ([mục 7.2](#72-kiểm-tra-cần-làm-gì-sau-khi-pull)).
+
+### 3.3. Ý nghĩa các biến và biến nào dùng cho cách chạy nào
+
+| Biến | Giá trị mẫu | Cách A (Docker) | Cách B (trên máy) | Ý nghĩa |
+|---|---|---|---|---|
+| `DB_USER` | `postgres` | ✔ | ✔ | Tài khoản PostgreSQL |
+| `DB_PASSWORD` | `doi_mat_khau_nay` | ✔ | ✔ | Mật khẩu PostgreSQL (bạn tự đặt) |
+| `DB_NAME` | `quanly_hoso` | ✔ | ✔ | Tên database |
+| `DB_PORT` | `5432` | ✔ | ✔ | Cổng PostgreSQL mở ra máy host |
+| `DB_HOST` | `localhost` | Bỏ qua (compose tự đặt `db`) | ✔ | Địa chỉ database mà backend kết nối |
+| `NODE_ENV` | `development` | ✔ | ✔ | Môi trường chạy backend |
+| `PORT` | `5000` | Bỏ qua | ✔ | Cổng backend khi chạy trên máy |
+| `CORS_ORIGIN` | `http://localhost:5173` | Bỏ qua (tự đặt theo `FRONTEND_PORT`) | ✔ | Frontend nào được phép gọi API |
+| `VITE_API_URL` | `http://localhost:5000/api` | Bỏ qua (tự đặt theo `BACKEND_PORT`) | ✔ | Địa chỉ API mà giao diện gọi tới, cổng phải trùng `PORT` |
+| `BACKEND_PORT` | `5000` | ✔ | Bỏ qua | Cổng backend mở ra máy host |
+| `FRONTEND_PORT` | `5173` | ✔ | Bỏ qua (luôn là `5173`) | Cổng giao diện web mở ra máy host |
+| `PGADMIN_EMAIL` / `PGADMIN_PASSWORD` | `admin@example.com` / `doi_mat_khau_nay` | ✔ | ✔ | Tài khoản đăng nhập pgAdmin (profile `tools`) |
+| `PGADMIN_PORT` | `5050` | ✔ | ✔ | Cổng pgAdmin |
+
+### 3.4. Dùng thông tin trong `.env` ở đâu
+Trong tài liệu này, `<DB_USER>` nghĩa là "giá trị `DB_USER` trong file `.env` của bạn", tương tự với các biến khác.
+
+| Khi cần... | Dùng giá trị |
+|---|---|
+| Mở giao diện web (Cách A) | `http://localhost:<FRONTEND_PORT>` |
+| Gọi API (Cách A) | `http://localhost:<BACKEND_PORT>/api` |
+| Gọi API (Cách B) | `http://localhost:<PORT>/api` |
+| Đăng nhập pgAdmin tại `http://localhost:<PGADMIN_PORT>` | Email `<PGADMIN_EMAIL>`, mật khẩu `<PGADMIN_PASSWORD>` |
+| Kết nối DB từ pgAdmin (chạy trong Docker) | Host `db`, Port `5432`, Username `<DB_USER>`, Password `<DB_PASSWORD>`, Database `<DB_NAME>` |
+| Kết nối DB từ DBeaver / TablePlus (trên máy) | Host `localhost`, Port `<DB_PORT>`, Username `<DB_USER>`, Password `<DB_PASSWORD>`, Database `<DB_NAME>` |
+| Vào `psql` | `docker exec -it qlhs_db psql -U <DB_USER> -d <DB_NAME>` |
+
+Với giá trị mẫu, các địa chỉ là http://localhost:5173 (web), http://localhost:5000/api (API) và http://localhost:5050 (pgAdmin). Các ví dụ phía dưới dùng giá trị mẫu. Nếu bạn đổi cổng thì thay tương ứng.
+
+### 3.5. Khi thiếu hoặc sai file `.env`
+**File `.env` là bắt buộc.** Dự án không có giá trị mặc định ẩn. Thiếu file hoặc thiếu biến, cả 3 thành phần đều dừng ngay kèm thông báo chỉ rõ cách sửa:
+
+| Lệnh | Thông báo khi thiếu `.env` |
+|---|---|
+| `docker compose up -d` | `required variable <TÊN_BIẾN> is missing a value: chưa có file .env - hãy chạy lệnh cp .env.example .env` |
+| `npm run dev` trong `backend/` | `[CẤU HÌNH] Không thể khởi động backend: thiếu biến môi trường.` kèm danh sách biến thiếu, rồi `exit 1` |
+| `npm run dev` trong `frontend/` | `[CẤU HÌNH] Thiếu biến VITE_API_URL.`, Vite không khởi động |
+
+Kiểm tra nhanh file `.env` đã đủ biến chưa (không chạy container nào):
+```bash
+docker compose config --quiet && echo "File .env hop le"
+```
 
 ---
 
@@ -148,7 +196,7 @@ docker compose up -d --build
 - `--build`: build image cho backend và frontend.
 - `-d`: chạy nền, trả lại terminal cho bạn.
 
-Lần đầu sẽ mất vài phút để tải image `postgres`, `node` và cài thư viện.
+Phải tạo file `.env` trước ([mục 3](#3-chuẩn-bị-file-cấu-hình-môi-trường-env)). Lần đầu sẽ mất vài phút để tải image `postgres`, `node` và cài thư viện.
 
 Khi PostgreSQL khởi tạo lần đầu, nó tự chạy các file trong `database/init/` để **tạo bảng và thêm dữ liệu mẫu**.
 
@@ -178,8 +226,8 @@ Nhấn `Ctrl + C` để thoát xem log (container vẫn chạy).
 ### 4.4. Truy cập
 | Dịch vụ | Địa chỉ |
 |---|---|
-| Giao diện web | http://localhost:5173 |
-| Backend API | http://localhost:5000/api |
+| Giao diện web | http://localhost:5173 (cổng `FRONTEND_PORT`) |
+| Backend API | http://localhost:5000/api (cổng `BACKEND_PORT`) |
 | Kiểm tra API + DB | http://localhost:5000/api/health |
 
 ### 4.5. Sửa code khi chạy bằng Docker
@@ -193,19 +241,21 @@ Không cần chạy lại `docker compose` sau mỗi lần sửa code.
 ```bash
 docker compose --profile tools up -d
 ```
-1. Mở http://localhost:5050, đăng nhập bằng `PGADMIN_EMAIL` / `PGADMIN_PASSWORD` trong `.env` (mặc định `admin@example.com` / `admin`).
+1. Mở http://localhost:5050 (cổng `PGADMIN_PORT`), đăng nhập bằng `PGADMIN_EMAIL` / `PGADMIN_PASSWORD` trong file `.env` của bạn.
 2. Chuột phải **Servers → Register → Server**.
 3. Tab **General**: Name = `quanly_hoso`.
-4. Tab **Connection**: Host = `db`, Port = `5432`, Username = `postgres`, Password = `postgres`.
+4. Tab **Connection**: Host = `db`, Port = `5432` (cổng bên trong Docker, luôn là 5432), Username = `<DB_USER>`, Password = `<DB_PASSWORD>` lấy từ `.env`.
 5. Bấm **Save**, mở **Databases → quanly_hoso → Schemas → public → Tables** để xem các bảng.
 
-Có thể dùng DBeaver hoặc TablePlus thay cho pgAdmin. Khi đó Host = `localhost`, Port = `5432`.
+Có thể dùng DBeaver hoặc TablePlus thay cho pgAdmin. Khi đó Host = `localhost`, Port = `<DB_PORT>`, Username/Password/Database lấy từ `.env`.
 
 ---
 
 ## 5. Cách B — DB bằng Docker, FE/BE chạy trên máy
 
 Dùng khi muốn debug bằng VS Code hoặc máy chạy Docker chậm. Cần cài Node.js 22.
+
+Backend và frontend tự đọc file `.env` ở thư mục gốc, không cần tạo thêm `.env` trong `backend/` hay `frontend/`. Cách này dùng `DB_HOST`, `PORT`, `CORS_ORIGIN`, `VITE_API_URL` (xem [mục 3.3](#33-ý-nghĩa-các-biến-và-biến-nào-dùng-cho-cách-chạy-nào)).
 
 ### 5.1. Chạy riêng PostgreSQL
 ```bash
@@ -218,7 +268,7 @@ cd backend
 npm install
 npm run dev
 ```
-Thấy `[DB] Kết nối PostgreSQL thành công` là được. API chạy tại http://localhost:5000.
+Thấy `[DB] Kết nối PostgreSQL thành công` là được. API chạy tại http://localhost:5000 (cổng `PORT`).
 
 ### 5.3. Chạy Frontend (mở terminal thứ hai)
 ```bash
@@ -251,6 +301,7 @@ Mở http://localhost:5173.
    ```bash
    docker exec -it qlhs_db psql -U postgres -d quanly_hoso
    ```
+   Thay `postgres` và `quanly_hoso` bằng `DB_USER` và `DB_NAME` trong `.env` nếu bạn đã đổi.
    Trong `psql`: gõ `\dt` để xem bảng, `SELECT * FROM vu_viec;` để xem dữ liệu, `\q` để thoát.
 
 ---
@@ -278,7 +329,7 @@ git stash pop      # lấy lại thay đổi
 | Chỉ code trong `src/` | Không cần làm gì, tự reload | Không cần làm gì, tự reload |
 | `package.json` (thêm/bớt thư viện) | `docker compose up -d --build -V` | `npm install` trong `backend/` hoặc `frontend/` |
 | `Dockerfile` hoặc `docker-compose.yml` | `docker compose up -d --build` | `docker compose up -d db` |
-| Có biến `.env` mới (nhóm thông báo) | Xin file `.env` mới, hoặc tự thêm biến vào `.env` của bạn | Giống Cách A |
+| `.env.example` (có biến mới) | Chép biến mới từ `.env.example` sang `.env` của bạn | Giống Cách A |
 | `database/init/*.sql` (schema mới) | Tạo lại DB, xem [mục 9.3](#93-tạo-lại-database-từ-đầu-xóa-toàn-bộ-dữ-liệu) | Tạo lại DB, xem mục 9.3 |
 
 > **Vì sao cần `-V`?** Thư viện (`node_modules`) trong container nằm trên một volume riêng. Cờ `-V` tạo lại volume này để cài đúng thư viện mới. Thiếu cờ này sẽ gặp lỗi `Cannot find module ...`.
@@ -360,12 +411,13 @@ docker compose up -d --build
 | Lỗi | Nguyên nhân | Cách xử lý |
 |---|---|---|
 | `Cannot connect to the Docker daemon` / `error during connect` | Docker Desktop chưa mở | Mở Docker Desktop, đợi **Engine running** rồi chạy lại |
-| `port is already allocated` / `address already in use` | Cổng 5432, 5000 hoặc 5173 đang bị chương trình khác dùng (thường là PostgreSQL cài sẵn trên máy) | Đổi cổng trong `.env`, ví dụ `DB_PORT=5433`, rồi chạy lại `docker compose up -d` |
+| `port is already allocated` / `address already in use` | Cổng 5432, 5000 hoặc 5173 đang bị chương trình khác dùng (thường là PostgreSQL cài sẵn trên máy) | Đổi cổng trong `.env` (`DB_PORT=5433`, `BACKEND_PORT`, `FRONTEND_PORT`), rồi chạy lại `docker compose up -d` |
+| `required variable ... is missing a value` | Chưa có file `.env` hoặc thiếu biến | `cp .env.example .env`, hoặc chép biến còn thiếu từ `.env.example` |
 | `/api/health` trả `ECONNREFUSED` | Database chưa chạy hoặc sai host/cổng | `docker compose ps` để xem `qlhs_db`. Với Cách B kiểm tra `DB_HOST=localhost` và `DB_PORT` trong `.env` |
-| `password authentication failed` | Đổi `DB_PASSWORD` sau khi DB đã khởi tạo | Mật khẩu chỉ áp dụng lúc tạo DB lần đầu. Đổi lại như cũ hoặc tạo lại DB (mục 9.3) |
+| `password authentication failed` | Đổi `DB_USER` / `DB_PASSWORD` sau khi DB đã khởi tạo | Mật khẩu chỉ áp dụng lúc tạo DB lần đầu. Đổi lại như cũ hoặc tạo lại DB (mục 9.3) |
 | `relation "vu_viec" does not exist` | DB được tạo trước khi có file schema | Tạo lại DB (mục 9.3) |
 | `Cannot find module '...'` trong container | Có thư viện mới sau khi pull | `docker compose up -d --build -V` |
-| Giao diện báo `Không kết nối được API` | Backend chưa chạy hoặc sai `VITE_API_URL` | Kiểm tra http://localhost:5000/api/health, xem log `docker compose logs backend` |
+| Giao diện báo `Không kết nối được API` | Backend chưa chạy, hoặc (Cách B) cổng trong `VITE_API_URL` khác `PORT` | Kiểm tra http://localhost:5000/api/health, xem log `docker compose logs backend` |
 | Sửa code nhưng không tự reload | File watcher trên Windows | Đã bật `usePolling` cho Vite. Nếu vẫn không được, chạy `docker compose restart frontend` (hoặc `backend`) |
 | `npm` báo lỗi quyền hoặc `EPERM` trên Windows | File bị khóa bởi VS Code hoặc antivirus | Đóng các terminal đang chạy `npm run dev`, xóa thư mục `node_modules` rồi `npm install` lại |
 

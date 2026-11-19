@@ -5,9 +5,11 @@ node_modules/
 dist/
 build/
 
-# Environment
+# Environment: bỏ qua .env và mọi biến thể (.env.local, .env.production...)
+# nhưng vẫn commit file mẫu .env.example
 .env
-.env.local
+.env.*
+!.env.example
 
 # Logs
 *.log

@@ -27,10 +27,10 @@ if (missing.length) {
   console.error('\n[CẤU HÌNH] Không thể khởi động backend: thiếu biến môi trường.');
   console.error(`[CẤU HÌNH] Biến còn thiếu: ${missing.join(', ')}`);
   if (fs.existsSync(envPath)) {
-    console.error(`[CẤU HÌNH] Đã tìm thấy file .env tại ${envPath} nhưng thiếu các biến trên.`);
+    console.error(`[CẤU HÌNH] Đã tìm thấy file .env tại ${envPath} nhưng thiếu các biến trên. So sánh với .env.example để bổ sung.`);
   } else {
     console.error(`[CẤU HÌNH] Không tìm thấy file .env tại ${envPath}`);
-    console.error('[CẤU HÌNH] Xin file .env từ thành viên trong nhóm rồi đặt vào thư mục gốc của project.');
+    console.error('[CẤU HÌNH] Tạo file .env bằng cách sao chép .env.example ở thư mục gốc: cp .env.example .env');
   }
   console.error('[CẤU HÌNH] Xem thêm: docs/HUONG_DAN_CAI_DAT.md (mục 3)\n');
   process.exit(1);

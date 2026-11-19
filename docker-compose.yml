@@ -1,21 +1,21 @@
 # Tất cả biến dưới đây dùng cú pháp ${VAR:?...} nên BẮT BUỘC phải có file .env
-# ở thư mục gốc (ngang hàng file này). Thiếu .env, docker compose sẽ báo lỗi và dừng.
+# ở thư mục gốc (ngang hàng file này). Tạo bằng: cp .env.example .env
 services:
   db:
     image: postgres:16-alpine
     container_name: qlhs_db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${DB_USER:?chưa có file .env ở thư mục gốc project}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?chưa có file .env ở thư mục gốc project}
-      POSTGRES_DB: ${DB_NAME:?chưa có file .env ở thư mục gốc project}
+      POSTGRES_USER: ${DB_USER:?chưa có file .env - hãy chạy lệnh cp .env.example .env}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?chưa có file .env - hãy chạy lệnh cp .env.example .env}
+      POSTGRES_DB: ${DB_NAME:?chưa có file .env - hãy chạy lệnh cp .env.example .env}
     ports:
-      - "${DB_PORT:?chưa có file .env ở thư mục gốc project}:5432"
+      - "${DB_PORT:?chưa có file .env - hãy chạy lệnh cp .env.example .env}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./database/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:?chưa có file .env} -d ${DB_NAME:?chưa có file .env}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:?chưa có file .env - hãy chạy lệnh cp .env.example .env} -d ${DB_NAME:?chưa có file .env - hãy chạy lệnh cp .env.example .env}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -25,10 +25,10 @@ services:
     container_name: qlhs_pgadmin
     restart: unless-stopped
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:?chưa có file .env ở thư mục gốc project}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?chưa có file .env ở thư mục gốc project}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:?chưa có file .env - hãy chạy lệnh cp .env.example .env}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?chưa có file .env - hãy chạy lệnh cp .env.example .env}
     ports:
-      - "${PGADMIN_PORT:?chưa có file .env ở thư mục gốc project}:80"
+      - "${PGADMIN_PORT:?chưa có file .env - hãy chạy lệnh cp .env.example .env}:80"
     depends_on:
       - db
     profiles: ["tools"]
@@ -39,15 +39,15 @@ services:
     restart: unless-stopped
     environment:
       PORT: 5000
-      NODE_ENV: ${NODE_ENV:?chưa có file .env ở thư mục gốc project}
+      NODE_ENV: ${NODE_ENV:?chưa có file .env - hãy chạy lệnh cp .env.example .env}
       DB_HOST: db
       DB_PORT: 5432
-      DB_USER: ${DB_USER:?chưa có file .env ở thư mục gốc project}
-      DB_PASSWORD: ${DB_PASSWORD:?chưa có file .env ở thư mục gốc project}
-      DB_NAME: ${DB_NAME:?chưa có file .env ở thư mục gốc project}
-      CORS_ORIGIN: http://localhost:${FRONTEND_PORT:?chưa có file .env ở thư mục gốc project}
+      DB_USER: ${DB_USER:?chưa có file .env - hãy chạy lệnh cp .env.example .env}
+      DB_PASSWORD: ${DB_PASSWORD:?chưa có file .env - hãy chạy lệnh cp .env.example .env}
+      DB_NAME: ${DB_NAME:?chưa có file .env - hãy chạy lệnh cp .env.example .env}
+      CORS_ORIGIN: http://localhost:${FRONTEND_PORT:?chưa có file .env - hãy chạy lệnh cp .env.example .env}
     ports:
-      - "${BACKEND_PORT:?chưa có file .env ở thư mục gốc project}:5000"
+      - "${BACKEND_PORT:?chưa có file .env - hãy chạy lệnh cp .env.example .env}:5000"
     volumes:
       - ./backend:/app
       - /app/node_modules
@@ -60,9 +60,9 @@ services:
     container_name: qlhs_frontend
     restart: unless-stopped
     environment:
-      VITE_API_URL: http://localhost:${BACKEND_PORT:?chưa có file .env ở thư mục gốc project}/api
+      VITE_API_URL: http://localhost:${BACKEND_PORT:?chưa có file .env - hãy chạy lệnh cp .env.example .env}/api
     ports:
-      - "${FRONTEND_PORT:?chưa có file .env ở thư mục gốc project}:5173"
+      - "${FRONTEND_PORT:?chưa có file .env - hãy chạy lệnh cp .env.example .env}:5173"
     volumes:
       - ./frontend:/app
       - /app/node_modules
