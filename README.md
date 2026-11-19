@@ -23,6 +23,9 @@ Khi viết code mới, dùng đúng ngôn ngữ và chuẩn module như bảng t
 - Nhánh chính: `main`, không commit trực tiếp.
 - Mỗi việc làm trên một nhánh riêng: `feature/ten-chuc-nang`, `fix/ten-loi`.
 - Mọi thay đổi vào `main` phải qua Pull Request.
+- Người review: @TheBlueStars. Người merge: @TheBlueStars.
+- Commit message ngắn gọn, nói rõ thay đổi gì.
+- Commit rõ chi tiết những gì đã làm trên branch trước khi gửi merge request.
 
 ## Công nghệ sử dụng
 | Thành phần | Công nghệ |
@@ -178,8 +181,3 @@ docker compose logs -f backend     # Xem log backend
 docker compose restart backend     # Khởi động lại 1 service
 docker compose down                # Dừng (giữ dữ liệu)
 ```
-Người review: @TheBlueStars. Người merge: @TheBlueStars.
-
-Commit rõ chi tiết những gì đã làm trên branch trước khi gửi merge request.
-- Người review: @TheBlueStars. Người merge: @TheBlueStars.
-- Commit message ngắn gọn, nói rõ thay đổi gì.
