@@ -1,0 +1,7 @@
+body { font-family: system-ui, sans-serif; margin: 0; background: #f5f6f8; color: #222; }
+.container { max-width: 960px; margin: 0 auto; padding: 24px; }
+.status { color: #555; font-size: 14px; }
+.error { color: #c0392b; }
+table { width: 100%; border-collapse: collapse; background: #fff; }
+th, td { padding: 8px 12px; border-bottom: 1px solid #e3e3e3; text-align: left; }
+th { background: #fafafa; }
