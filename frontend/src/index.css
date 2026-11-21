@@ -1,7 +1,13 @@
-body { font-family: system-ui, sans-serif; margin: 0; background: #f5f6f8; color: #222; }
-.container { max-width: 960px; margin: 0 auto; padding: 24px; }
-.status { color: #555; font-size: 14px; }
-.error { color: #c0392b; }
-table { width: 100%; border-collapse: collapse; background: #fff; }
-th, td { padding: 8px 12px; border-bottom: 1px solid #e3e3e3; text-align: left; }
-th { background: #fafafa; }
+body { margin: 0; }
+.app-layout { min-height: 100vh; }
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: #fff;
+  border-bottom: 1px solid #f0f0f0;
+  padding: 0 24px;
+}
+.app-title.ant-typography { margin: 0; }
+.app-content { width: 100%; max-width: 1100px; margin: 0 auto; padding: 24px; box-sizing: border-box; }

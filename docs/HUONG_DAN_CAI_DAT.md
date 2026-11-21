@@ -216,10 +216,11 @@ qlhs_frontend    Up
 ```bash
 docker compose logs -f backend
 ```
-Thấy hai dòng sau là backend đã kết nối được database:
+Thấy các dòng sau là backend đã kết nối được database (lần đầu NestJS cần khoảng 10–20 giây để biên dịch TypeScript):
 ```
-[API] Đang chạy tại http://localhost:5000
-[DB] Kết nối PostgreSQL thành công (...)
+[Nest] ... LOG [API] Đang chạy tại http://localhost:5000
+[Nest] ... LOG [API] Tài liệu API: http://localhost:5000/api/docs
+[Nest] ... LOG [DB] Kết nối PostgreSQL thành công (...)
 ```
 Nhấn `Ctrl + C` để thoát xem log (container vẫn chạy).
 
@@ -229,11 +230,12 @@ Nhấn `Ctrl + C` để thoát xem log (container vẫn chạy).
 | Giao diện web | http://localhost:5173 (cổng `FRONTEND_PORT`) |
 | Backend API | http://localhost:5000/api (cổng `BACKEND_PORT`) |
 | Kiểm tra API + DB | http://localhost:5000/api/health |
+| Tài liệu API (Swagger) | http://localhost:5000/api/docs |
 
 ### 4.5. Sửa code khi chạy bằng Docker
 Thư mục `frontend/` và `backend/` được gắn trực tiếp vào container, nên **sửa code và lưu là tự cập nhật**:
 - Frontend: trình duyệt tự reload (Vite).
-- Backend: server tự khởi động lại (nodemon).
+- Backend: NestJS tự biên dịch lại TypeScript và khởi động lại server (`nest start --watch`).
 
 Không cần chạy lại `docker compose` sau mỗi lần sửa code.
 
@@ -292,12 +294,13 @@ Mở http://localhost:5173.
    { "status": "ok", "database": "connected", "dbTime": "..." }
    ```
 2. Mở http://localhost:5000/api/vu-viec. Phải thấy 2 vụ việc mẫu `VV-2026-001` và `VV-2026-002`.
-3. Mở http://localhost:5173. Dòng trạng thái báo `API: ok · DB: connected` và bảng **Danh sách vụ việc** có 2 dòng.
-4. (Tùy chọn) Thử tạo vụ việc mới bằng API:
+3. Mở http://localhost:5000/api/docs. Trang Swagger liệt kê các API `health` và `vu-viec`, bấm **Try it out** để gọi thử.
+4. Mở http://localhost:5173. Góc phải phía trên có nhãn xanh `API: ok · DB: connected` và bảng **Danh sách vụ việc** có 2 dòng.
+5. (Tùy chọn) Thử tạo vụ việc mới bằng API:
    ```bash
    curl -X POST http://localhost:5000/api/vu-viec -H "Content-Type: application/json" -d "{\"ma_vu_viec\":\"VV-TEST-01\",\"tieu_de\":\"Vụ việc thử\"}"
    ```
-5. (Tùy chọn) Truy cập database bằng dòng lệnh:
+6. (Tùy chọn) Truy cập database bằng dòng lệnh:
    ```bash
    docker exec -it qlhs_db psql -U postgres -d quanly_hoso
    ```
@@ -305,19 +308,19 @@ Mở http://localhost:5173.
    Trong `psql`: gõ `\dt` để xem bảng, `SELECT * FROM vu_viec;` để xem dữ liệu, `\q` để thoát.
 
 ### Ảnh mẫu kết quả đúng
-Ảnh chụp lúc kiểm tra thực tế (Windows 11, Docker 29.9.3, chạy bằng `docker compose up -d --build`). Kết quả trên máy bạn phải tương tự.
+Ảnh chụp lúc kiểm tra thực tế trên bản NestJS + Ant Design (Windows 11, Docker 29.9.3, chạy bằng `docker compose up -d --build`, ngày 21/11/2026). Kết quả trên máy bạn phải tương tự.
 
 **Kết nối database thành công:** `qlhs_db` ở trạng thái `healthy`, log backend báo `[DB] Kết nối PostgreSQL thành công`, database có 3 bảng và dữ liệu mẫu.
 
-![Kết nối database thành công](images/1-ket-noi-database.jpg)
+![Kết nối database thành công](images/1-ket-noi-database.png)
 
-**Backend chạy được:** `/api/health` trả `200` với `"database":"connected"`, `/api/vu-viec` trả dữ liệu, frontend được phép gọi API (CORS).
+**Backend chạy được:** `/api/health` trả `200` với `"database":"connected"`, `/api/vu-viec` trả dữ liệu, các route `health` và `vu-viec` được NestJS map đầy đủ, frontend được phép gọi API (CORS).
 
-![Backend API chạy được](images/2-backend-api.jpg)
+![Backend API chạy được](images/2-backend-api.png)
 
-**Frontend chạy được và gọi được backend:** http://localhost:5173 hiện `API: ok · DB: connected` và danh sách 2 vụ việc mẫu.
+**Frontend chạy được và gọi được backend:** http://localhost:5173 hiện nhãn `API: ok · DB: connected` ở góc phải header và bảng Ant Design liệt kê 2 vụ việc mẫu kèm nhãn trạng thái.
 
-![Frontend chạy được](images/3-frontend.jpg)
+![Frontend chạy được](images/3-frontend.png)
 
 ---
 
@@ -434,6 +437,8 @@ docker compose up -d --build
 | `Cannot find module '...'` trong container | Có thư viện mới sau khi pull | `docker compose up -d --build -V` |
 | Giao diện báo `Không kết nối được API` | Backend chưa chạy, hoặc (Cách B) cổng trong `VITE_API_URL` khác `PORT` | Kiểm tra http://localhost:5000/api/health, xem log `docker compose logs backend` |
 | Sửa code nhưng không tự reload | File watcher trên Windows | Đã bật `usePolling` cho Vite. Nếu vẫn không được, chạy `docker compose restart frontend` (hoặc `backend`) |
+| `error TS...` khi `npm run build` / `npm run typecheck`, hoặc backend báo `Found N errors` | Code sai kiểu dữ liệu TypeScript | Đọc file và dòng được báo trong lỗi rồi sửa. VS Code gạch đỏ đúng chỗ đó |
+| Backend báo `Nest can't resolve dependencies of ...` | Service dùng một provider chưa khai báo | Thêm service vào `providers` của module, hoặc import module chứa nó |
 | `npm` báo lỗi quyền hoặc `EPERM` trên Windows | File bị khóa bởi VS Code hoặc antivirus | Đóng các terminal đang chạy `npm run dev`, xóa thư mục `node_modules` rồi `npm install` lại |
 
 Xem log chi tiết từng service khi gặp lỗi khác:
