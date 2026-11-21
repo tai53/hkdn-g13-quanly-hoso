@@ -1,14 +1,14 @@
 # HKDN - Nhóm Nguyễn Thị Hoài Linh - Đề tài G1.3 - Hệ thống quản lý vụ việc và hồ sơ nghiệp vụ
 
-> **Ngôn ngữ lập trình đang sử dụng: JavaScript** (chưa dùng TypeScript)
+> **Ngôn ngữ lập trình đang sử dụng: TypeScript** (cả Frontend và Backend)
 
-| Phần | Ngôn ngữ | Chuẩn module | Đuôi file |
+| Phần | Ngôn ngữ | Framework | Đuôi file |
 |---|---|---|---|
-| Frontend | JavaScript + JSX (React 18, Vite) | ES Modules (`import` / `export`) | `.js`, `.jsx` |
-| Backend | JavaScript (Node.js 22, Express) | CommonJS (`require` / `module.exports`) | `.js` |
+| Frontend | TypeScript + TSX | React 18, Vite, Ant Design 5 | `.ts`, `.tsx` |
+| Backend | TypeScript | NestJS 11 (Node.js 22) | `.ts` |
 | Database | SQL (PostgreSQL 16) | | `.sql` |
 
-Khi viết code mới, dùng đúng ngôn ngữ và chuẩn module như bảng trên. Nếu nhóm thống nhất chuyển sang TypeScript, cập nhật lại mục này.
+Khi viết code mới chỉ dùng `.ts` / `.tsx`, không thêm file `.js` / `.jsx`. Chạy `npm run typecheck` trong `backend/` hoặc `frontend/` trước khi tạo Pull Request để chắc chắn không có lỗi kiểu.
 
 ## Thành viên
 | Họ tên | GitHub | Vai trò |
@@ -30,8 +30,8 @@ Khi viết code mới, dùng đúng ngôn ngữ và chuẩn module như bảng t
 ## Công nghệ sử dụng
 | Thành phần | Công nghệ |
 |---|---|
-| Frontend | React 18 + Vite, Axios |
-| Backend | Node.js 22, Express, `pg` |
+| Frontend | React 18 + TypeScript, Vite, Ant Design 5, Axios, Day.js |
+| Backend | NestJS 11 + TypeScript (Node.js 22), `pg`, class-validator, Swagger |
 | Database | PostgreSQL 16 (chạy bằng Docker), pgAdmin (tùy chọn) |
 | Hạ tầng | Docker, Docker Compose |
 
@@ -44,30 +44,35 @@ hkdn-g13-quanly-hoso/
 ├── .gitignore
 ├── README.md
 │
-├── frontend/                 # Giao diện người dùng (React + Vite)
+├── frontend/                 # Giao diện người dùng (React + TypeScript + Vite + Ant Design)
 │   ├── Dockerfile
 │   ├── index.html
-│   ├── vite.config.js
+│   ├── vite.config.ts
+│   ├── tsconfig*.json        # Cấu hình TypeScript
 │   ├── package.json
 │   └── src/
-│       ├── main.jsx          # Điểm khởi chạy
-│       ├── App.jsx
+│       ├── main.tsx          # Điểm khởi chạy, cấu hình Ant Design (tiếng Việt, theme)
+│       ├── App.tsx           # Layout chính
 │       ├── index.css
 │       ├── api/              # Gọi API (axios client, các hàm theo module)
+│       ├── types/            # Kiểu dữ liệu API trả về (khớp với backend)
 │       ├── components/       # Component dùng chung
 │       └── pages/            # Các trang
 │
-├── backend/                  # REST API (Node.js + Express)
+├── backend/                  # REST API (NestJS + TypeScript)
 │   ├── Dockerfile
+│   ├── nest-cli.json
+│   ├── tsconfig.json
 │   ├── package.json
 │   └── src/
-│       ├── server.js         # Khởi động server + kiểm tra kết nối DB
-│       ├── app.js            # Cấu hình Express, middleware, route
-│       ├── config/env.js     # Đọc & kiểm tra biến môi trường (thiếu là dừng)
-│       ├── config/db.js      # Kết nối PostgreSQL (connection pool)
-│       ├── routes/           # Định nghĩa route
-│       ├── controllers/      # Xử lý nghiệp vụ
-│       └── middlewares/      # Middleware (xử lý lỗi, xác thực...)
+│       ├── main.ts           # Khởi động server: tiền tố /api, CORS, validate, Swagger, kiểm tra DB
+│       ├── app.module.ts     # Module gốc, khai báo các module nghiệp vụ
+│       ├── config/env.ts     # Đọc & kiểm tra biến môi trường (thiếu là dừng)
+│       ├── database/         # DatabaseService: kết nối PostgreSQL (connection pool)
+│       ├── common/filters/   # Xử lý lỗi chung, trả về dạng { message }
+│       └── modules/          # Mỗi nghiệp vụ một thư mục
+│           ├── health/       # GET /api/health
+│           └── vu-viec/      # Module mẫu: controller, service, dto, types
 │
 ├── database/                 # Kết nối & khởi tạo PostgreSQL
 │   └── init/
@@ -100,11 +105,12 @@ docker compose up -d --build
 | Frontend | http://localhost:5173 (cổng `FRONTEND_PORT`) |
 | Backend API | http://localhost:5000/api (cổng `BACKEND_PORT`) |
 | Kiểm tra API + DB | http://localhost:5000/api/health |
+| Tài liệu API (Swagger) | http://localhost:5000/api/docs |
 | PostgreSQL | `localhost:<DB_PORT>`, user `<DB_USER>`, mật khẩu `<DB_PASSWORD>`, database `<DB_NAME>` |
 
 Địa chỉ trên dùng giá trị mẫu trong `.env.example`. `<DB_USER>` nghĩa là giá trị `DB_USER` trong file `.env` của bạn.
 
-Mã nguồn được mount vào container nên sửa code là tự reload (backend dùng nodemon, frontend dùng Vite).
+Mã nguồn được mount vào container nên sửa code là tự reload (backend dùng `nest start --watch`, frontend dùng Vite).
 
 Bật thêm pgAdmin (giao diện quản lý DB) tại http://localhost:5050 (cổng `PGADMIN_PORT`), đăng nhập bằng `PGADMIN_EMAIL` / `PGADMIN_PASSWORD`:
 ```bash
@@ -129,7 +135,7 @@ npm run dev                 # http://localhost:5173
 ```
 
 ## Biến môi trường
-Toàn bộ cấu hình nằm trong **một file `.env` duy nhất ở thư mục gốc**, tạo bằng cách sao chép file mẫu `.env.example` (`cp .env.example .env`) rồi điền mật khẩu của bạn. File này được đọc bởi cả docker-compose, backend (`backend/src/config/env.js`) và frontend (`frontend/vite.config.js`) — không cần tạo `.env` riêng trong `backend/` hay `frontend/`.
+Toàn bộ cấu hình nằm trong **một file `.env` duy nhất ở thư mục gốc**, tạo bằng cách sao chép file mẫu `.env.example` (`cp .env.example .env`) rồi điền mật khẩu của bạn. File này được đọc bởi cả docker-compose, backend (`backend/src/config/env.ts`) và frontend (`frontend/vite.config.ts`) — không cần tạo `.env` riêng trong `backend/` hay `frontend/`.
 
 | Biến | Nơi dùng | Ý nghĩa |
 |---|---|---|
@@ -173,6 +179,27 @@ Toàn bộ cấu hình nằm trong **một file `.env` duy nhất ở thư mục
 | GET | `/api/vu-viec` | Danh sách vụ việc |
 | GET | `/api/vu-viec/:id` | Chi tiết vụ việc kèm hồ sơ |
 | POST | `/api/vu-viec` | Tạo vụ việc (`ma_vu_viec`, `tieu_de`, `mo_ta`, `ngay_tiep_nhan`) |
+
+Xem và gọi thử toàn bộ API tại http://localhost:5000/api/docs (Swagger, tự sinh từ code).
+
+## Thêm một module nghiệp vụ mới (Backend)
+Làm theo mẫu `backend/src/modules/vu-viec/`:
+
+| File | Vai trò |
+|---|---|
+| `xxx.module.ts` | Khai báo controller và service của module |
+| `xxx.controller.ts` | Định nghĩa route, nhận dữ liệu, gọi service |
+| `xxx.service.ts` | Nghiệp vụ và truy vấn database qua `DatabaseService` |
+| `dto/*.dto.ts` | Dữ liệu client gửi lên, kiểm tra bằng decorator của `class-validator` |
+| `xxx.types.ts` | Kiểu dữ liệu khớp với bảng trong database |
+
+Có thể tạo nhanh khung module bằng Nest CLI (đứng trong `backend/`):
+```bash
+npx nest g module modules/ho-so
+npx nest g controller modules/ho-so --no-spec
+npx nest g service modules/ho-so --no-spec
+```
+Lệnh `nest g module` tự thêm module mới vào `app.module.ts`. Bên Frontend, thêm kiểu tương ứng vào `frontend/src/types/` và hàm gọi API vào `frontend/src/api/`.
 
 ## Lệnh Docker thường dùng
 ```bash

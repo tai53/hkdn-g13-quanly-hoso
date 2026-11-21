@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => {
       '[CẤU HÌNH] Thiếu biến VITE_API_URL.\n' +
         `Không tìm thấy file .env (hoặc file thiếu biến này) tại: ${rootDir}\n` +
         'Tạo file .env bằng cách sao chép .env.example ở thư mục gốc: cp .env.example .env\n' +
-        'Xem thêm: docs/HUONG_DAN_CAI_DAT.md (mục 3)'
+        'Xem thêm: docs/HUONG_DAN_CAI_DAT.md (mục 3)',
     );
   }
 
