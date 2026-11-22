@@ -322,6 +322,10 @@ Mở http://localhost:5173.
 
 ![Frontend chạy được](images/3-frontend.png)
 
+**Tài liệu API (Swagger) chạy được:** http://localhost:5000/api/docs hiện trang Swagger OAS 3.0, liệt kê nhóm `health` (`GET /api/health`) và nhóm `vu-viec` (`GET /api/vu-viec`, `POST /api/vu-viec`, `GET /api/vu-viec/{id}`) kèm schema `CreateVuViecDto`. Bấm **Try it out** để gọi thử trực tiếp.
+
+![Tài liệu API Swagger](images/4-swagger.png)
+
 ---
 
 ## 7. Pull code mới và chạy lại
