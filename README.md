@@ -72,6 +72,7 @@ hkdn-g13-quanly-hoso/
 │       ├── common/filters/   # Xử lý lỗi chung, trả về dạng { message }
 │       └── modules/          # Mỗi nghiệp vụ một thư mục
 │           ├── health/       # GET /api/health
+│           ├── auth/         # Đăng nhập, đăng xuất, bearer token
 │           └── vu-viec/      # Module mẫu: controller, service, dto, types
 │
 ├── database/                 # Kết nối & khởi tạo PostgreSQL
@@ -96,7 +97,7 @@ hkdn-g13-quanly-hoso/
 git clone https://github.com/tai53/hkdn-g13-quanly-hoso.git
 cd hkdn-g13-quanly-hoso
 cp .env.example .env       # PowerShell: Copy-Item .env.example .env
-# Mở .env, đặt DB_PASSWORD và PGADMIN_PASSWORD của bạn (trước lần chạy đầu tiên)
+# Mở .env, đặt DB_PASSWORD, PGADMIN_PASSWORD và tạo JWT_SECRET ngẫu nhiên dài ít nhất 32 ký tự
 docker compose up -d --build
 ```
 
@@ -143,6 +144,7 @@ Toàn bộ cấu hình nằm trong **một file `.env` duy nhất ở thư mục
 | `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | backend, docker-compose | Thông tin kết nối PostgreSQL |
 | `PORT`, `NODE_ENV` | backend | Cổng API khi chạy trên máy (Cách 2) và môi trường chạy |
 | `CORS_ORIGIN` | backend (Cách 2) | Origin của frontend được phép gọi API. Cách 1 tự đặt theo `FRONTEND_PORT` |
+| `JWT_SECRET` | backend, docker-compose | Khóa bí mật ký token; cần chuỗi ngẫu nhiên dài ít nhất 32 ký tự |
 | `VITE_API_URL` | frontend (Cách 2) | Địa chỉ backend API, cổng phải trùng `PORT`. Cách 1 tự đặt theo `BACKEND_PORT` |
 | `BACKEND_PORT`, `FRONTEND_PORT` | docker-compose (Cách 1) | Cổng mở ra máy host |
 | `PGADMIN_*` | docker-compose | Tài khoản & cổng pgAdmin (profile `tools`) |
@@ -176,9 +178,11 @@ Toàn bộ cấu hình nằm trong **một file `.env` duy nhất ở thư mục
 | Method | Endpoint | Mô tả |
 |---|---|---|
 | GET | `/api/health` | Trạng thái API và kết nối DB |
-| GET | `/api/vu-viec` | Danh sách vụ việc |
-| GET | `/api/vu-viec/:id` | Chi tiết vụ việc kèm hồ sơ |
-| POST | `/api/vu-viec` | Tạo vụ việc (`ma_vu_viec`, `tieu_de`, `mo_ta`, `ngay_tiep_nhan`) |
+| POST | `/api/auth/login` | Đăng nhập bằng `username` và `password`, nhận bearer token |
+| POST | `/api/auth/logout` | Thu hồi phiên hiện tại (yêu cầu bearer token) |
+| GET | `/api/vu-viec` | Danh sách vụ việc (yêu cầu bearer token) |
+| GET | `/api/vu-viec/:id` | Chi tiết vụ việc kèm hồ sơ (yêu cầu bearer token) |
+| POST | `/api/vu-viec` | Tạo vụ việc (yêu cầu bearer token) |
 
 Xem và gọi thử toàn bộ API tại http://localhost:5000/api/docs (Swagger, tự sinh từ code).
 
