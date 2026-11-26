@@ -1,9 +1,8 @@
-import { BadRequestException, Body, Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { ApiParam, ApiTags } from '@nestjs/swagger';
 import { CreateVuViecDto } from './dto/create-vu-viec.dto';
 import { VuViecService } from './vu-viec.service';
 
-// Controller: định nghĩa route, nhận và kiểm tra dữ liệu đầu vào, gọi service.
 @ApiTags('vu-viec')
 @Controller('vu-viec')
 export class VuViecController {
@@ -15,12 +14,14 @@ export class VuViecController {
     return this.vuViecService.findAll();
   }
 
-  // GET /api/vu-viec/:id (kèm danh sách hồ sơ)
+  // GET /api/vu-viec/:id (nhận UUID hoặc mã hồ sơ HS-2026-0001)
   @Get(':id')
-  findOne(
-    @Param('id', new ParseIntPipe({ exceptionFactory: () => new BadRequestException('id phải là số nguyên') }))
-    id: number,
-  ) {
+  @ApiParam({
+    name: 'id',
+    example: '44444444-4444-4444-4444-444444444401',
+    description: 'UUID hoặc mã hồ sơ (code)',
+  })
+  findOne(@Param('id') id: string) {
     return this.vuViecService.findOne(id);
   }
 
