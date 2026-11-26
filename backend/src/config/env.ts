@@ -21,6 +21,7 @@ const REQUIRED = [
   'DB_PASSWORD',
   'DB_NAME',
   'CORS_ORIGIN',
+  'JWT_SECRET',
 ] as const;
 
 const missing = REQUIRED.filter((key) => !process.env[key]);
@@ -40,10 +41,16 @@ if (missing.length) {
   process.exit(1);
 }
 
+if ((process.env.JWT_SECRET?.length ?? 0) < 32 || process.env.JWT_SECRET?.startsWith('thay_bang_')) {
+  console.error('[CẤU HÌNH] JWT_SECRET phải có ít nhất 32 ký tự. Hãy tạo một chuỗi ngẫu nhiên trong file .env.');
+  process.exit(1);
+}
+
 export interface AppEnv {
   port: number;
   nodeEnv: string;
   corsOrigin: string;
+  jwtSecret: string;
   db: {
     host: string;
     port: number;
@@ -60,6 +67,7 @@ export const env: AppEnv = {
   port: Number(e.PORT),
   nodeEnv: e.NODE_ENV,
   corsOrigin: e.CORS_ORIGIN,
+  jwtSecret: e.JWT_SECRET,
   db: {
     host: e.DB_HOST,
     port: Number(e.DB_PORT),

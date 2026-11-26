@@ -126,6 +126,7 @@ Mở file `.env` bằng VS Code và sửa:
 |---|---|---|
 | `DB_PASSWORD` | **Nên sửa** | Mật khẩu tự đặt cho PostgreSQL trên máy bạn |
 | `PGADMIN_PASSWORD` | **Nên sửa** | Mật khẩu tự đặt để đăng nhập pgAdmin |
+| `JWT_SECRET` | **Bắt buộc** | Thay bằng chuỗi ngẫu nhiên dài ít nhất 32 ký tự |
 | `DB_PORT` | Chỉ khi trùng cổng | Đổi thành `5433` nếu máy đã cài sẵn PostgreSQL |
 | `BACKEND_PORT`, `FRONTEND_PORT` | Chỉ khi trùng cổng | Cổng mở ra máy khi chạy bằng Docker |
 | Các biến còn lại | Không | Giữ nguyên giá trị mẫu |
@@ -134,6 +135,7 @@ Mở file `.env` bằng VS Code và sửa:
 > - Mật khẩu là của database **trên máy bạn**, không cần giống người khác trong nhóm.
 > - **Đặt mật khẩu trước lần chạy đầu tiên.** PostgreSQL chỉ áp dụng `DB_USER`, `DB_PASSWORD`, `DB_NAME` lúc tạo database lần đầu. Đổi sau đó phải tạo lại DB ([mục 9.3](#93-tạo-lại-database-từ-đầu-xóa-toàn-bộ-dữ-liệu)).
 > - Khi pull code mới mà `.env.example` có thêm biến, hãy chép biến đó sang `.env` của bạn ([mục 7.2](#72-kiểm-tra-cần-làm-gì-sau-khi-pull)).
+> - Không chia sẻ `JWT_SECRET`; thay khóa này sẽ làm các token đăng nhập đang dùng hết hiệu lực.
 
 ### 3.3. Ý nghĩa các biến và biến nào dùng cho cách chạy nào
 
@@ -147,6 +149,7 @@ Mở file `.env` bằng VS Code và sửa:
 | `NODE_ENV` | `development` | ✔ | ✔ | Môi trường chạy backend |
 | `PORT` | `5000` | Bỏ qua | ✔ | Cổng backend khi chạy trên máy |
 | `CORS_ORIGIN` | `http://localhost:5173` | Bỏ qua (tự đặt theo `FRONTEND_PORT`) | ✔ | Frontend nào được phép gọi API |
+| `JWT_SECRET` | chuỗi ngẫu nhiên 32+ ký tự | ✔ | ✔ | Khóa bí mật ký token đăng nhập; giữ riêng tư |
 | `VITE_API_URL` | `http://localhost:5000/api` | Bỏ qua (tự đặt theo `BACKEND_PORT`) | ✔ | Địa chỉ API mà giao diện gọi tới, cổng phải trùng `PORT` |
 | `BACKEND_PORT` | `5000` | ✔ | Bỏ qua | Cổng backend mở ra máy host |
 | `FRONTEND_PORT` | `5173` | ✔ | Bỏ qua (luôn là `5173`) | Cổng giao diện web mở ra máy host |
@@ -314,7 +317,9 @@ Mở http://localhost:5173.
 
 ![Kết nối database thành công](images/1-ket-noi-database.png)
 
-**Backend chạy được:** `/api/health` trả `200` với `"database":"connected"`, `/api/vu-viec` trả dữ liệu, các route `health` và `vu-viec` được NestJS map đầy đủ, frontend được phép gọi API (CORS).
+**Backend chạy được:** `/api/health` trả `200` với `"database":"connected"`; API hồ sơ yêu cầu bearer token lấy từ `POST /api/auth/login`.
+
+**Xác thực API:** Gửi `POST /api/auth/login` với `{ "username": "...", "password": "..." }`, sau đó bấm **Authorize** trong Swagger và dán `access_token`. Các route `/api/vu-viec` yêu cầu bearer token. `POST /api/auth/logout` thu hồi token phiên hiện tại.
 
 ![Backend API chạy được](images/2-backend-api.png)
 
@@ -353,8 +358,14 @@ git stash pop      # lấy lại thay đổi
 | `Dockerfile` hoặc `docker-compose.yml` | `docker compose up -d --build` | `docker compose up -d db` |
 | `.env.example` (có biến mới) | Chép biến mới từ `.env.example` sang `.env` của bạn | Giống Cách A |
 | `database/init/*.sql` (schema mới) | Tạo lại DB, xem [mục 9.3](#93-tạo-lại-database-từ-đầu-xóa-toàn-bộ-dữ-liệu) | Tạo lại DB, xem mục 9.3 |
+| `database/migrations/*.sql` (nâng cấp schema) | Chạy migration theo hướng dẫn trong tài liệu | Chạy migration trên PostgreSQL đang dùng |
 
 > **Vì sao cần `-V`?** Thư viện (`node_modules`) trong container nằm trên một volume riêng. Cờ `-V` tạo lại volume này để cài đúng thư viện mới. Thiếu cờ này sẽ gặp lỗi `Cannot find module ...`.
+
+Khi nâng cấp database đã có dữ liệu từ bản trước G13-036, chạy migration tạo bảng phiên đăng nhập (không cần xóa volume):
+```bash
+docker compose exec db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /migrations/001_auth_sessions.sql'
+```
 
 Xem nhanh những file đã thay đổi sau khi pull:
 ```bash

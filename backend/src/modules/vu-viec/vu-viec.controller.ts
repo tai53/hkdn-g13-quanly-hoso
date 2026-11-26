@@ -1,9 +1,12 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { ApiParam, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreateVuViecDto } from './dto/create-vu-viec.dto';
 import { VuViecService } from './vu-viec.service';
 
 @ApiTags('vu-viec')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('vu-viec')
 export class VuViecController {
   constructor(private readonly vuViecService: VuViecService) {}
