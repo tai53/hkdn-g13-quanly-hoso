@@ -1,117 +1,159 @@
+
 # G13-038 – Nhật ký đăng nhập, đăng xuất
 
 ## 1. Thông tin nhiệm vụ
 
 - Mã nhiệm vụ: G13-038
 - Người thực hiện: Võ Thành Đạt
-- Phạm vi: Backend
-- Nhánh phát triển: `g13-038`
-- Nhánh nền tạm thời: `origin/g13-034`
-- Commit nền: `08f661b`
-- Trạng thái: Hoàn thành chức năng ghi nhật ký độc lập, chưa tích hợp Authentication.
+- Phạm vi: Backend – Nhật ký truy cập
+- Nhánh phát triển: `g13-038-integration`
+- Nhánh nền: `origin/g13-036`
+- Commit nền Authentication: `07af1cc`
+- Commit AuditLogService đã chuyển nền: `36b22db`
+- Ngày hoàn thành kiểm thử: 26/11/2026
+- Trạng thái: Đã triển khai, tích hợp và kiểm thử; chờ review và nghiệm thu.
 
 ## 2. Mục tiêu
 
-Ghi nhận thông tin tài khoản, thời gian, hoạt động đăng nhập, đăng xuất và kết quả thực hiện vào bảng `audit_logs` trong PostgreSQL, phục vụ việc theo dõi truy cập hệ thống.
+Ghi nhận thông tin tài khoản, thời gian, địa chỉ IP, hoạt động đăng nhập, đăng xuất và kết quả thực hiện vào bảng `audit_logs` trong PostgreSQL, phục vụ theo dõi truy cập hệ thống.
 
 ## 3. Cấu trúc mã nguồn
 
+### 3.1. Module nhật ký
+
+Các file tại `backend/src/modules/audit-log/`:
+
 | File | Chức năng |
 |---|---|
-| `audit-log.types.ts` | Định nghĩa kiểu dữ liệu đầu vào |
-| `audit-log.service.ts` | Thực hiện ghi nhật ký vào Database |
-| `audit-log.module.ts` | Cung cấp và export AuditLogService |
-| `audit-log.test.cjs` | Kiểm thử độc lập Service |
-| `audit-log.integration.test.cjs` | Kiểm thử tích hợp PostgreSQL và NestJS |
+| audit-log.types.ts | Định nghĩa kiểu dữ liệu đầu vào |
+| audit-log.service.ts | Ghi nhật ký vào PostgreSQL |
+| audit-log.module.ts | Cung cấp và export AuditLogService |
 
-Ba file TypeScript được đặt tại `backend/src/modules/audit-log/`.
+### 3.2. Tích hợp Authentication
 
-## 4. Dữ liệu ghi nhận
+Các file tại `backend/src/modules/auth/`:
+
+| File | Nội dung thay đổi |
+|---|---|
+| auth.module.ts | Import AuditLogModule |
+| auth.controller.ts | Lấy IP từ Request và truyền vào AuthService |
+| auth.service.ts | Ghi nhật ký đăng nhập, đăng xuất và xử lý lỗi ghi nhật ký |
+
+### 3.3. Kiểm thử
+
+| File | Chức năng |
+|---|---|
+| audit-log.test.cjs | Unit Test của AuditLogService |
+| audit-log.integration.test.cjs | Integration Test với PostgreSQL và NestJS |
+
+## 4. Cấu trúc dữ liệu nhật ký
 
 | Trường | Ý nghĩa |
 |---|---|
 | id | UUID do Database tự sinh |
 | user_id | ID tài khoản, có thể NULL |
-| username | Tên đăng nhập, có thể NULL |
+| username | Tên đăng nhập |
 | case_id | NULL đối với nhật ký đăng nhập, đăng xuất |
 | action | LOGIN hoặc LOGOUT |
 | result | SUCCESS hoặc FAILED |
-| ip_address | Địa chỉ IP, có thể NULL |
+| ip_address | Địa chỉ IP Backend nhận được, có thể NULL |
 | created_at | Thời gian do Database tự sinh |
 
-Không lưu mật khẩu, password hash hoặc token xác thực.
+Không lưu mật khẩu, password hash, JWT Token hoặc JWT Secret vào bảng nhật ký.
 
-## 5. Hướng dẫn tích hợp Authentication
+## 5. Cơ chế tích hợp Authentication
 
-### 5.1. Import Module
+Authentication sử dụng JWT Bearer Token kết hợp quản lý phiên trong bảng `auth_sessions`.
 
-Thêm AuditLogModule vào imports của AuthModule khi G13-036 được triển khai.
+### 5.1. Đăng nhập thành công
 
-```typescript
-import { AuditLogModule } from '../audit-log/audit-log.module';
-```
+- Kiểm tra thông tin tài khoản và mật khẩu.
+- Kiểm tra trạng thái hoạt động.
+- Tạo JWT và lưu phiên đăng nhập.
+- Ghi nhật ký LOGIN / SUCCESS.
+- Trả kết quả xác thực cho Client.
 
-### 5.2. Inject Service
+### 5.2. Đăng nhập thất bại
 
-Bổ sung AuditLogService vào constructor của AuthService hiện có, giữ nguyên các dependency khác.
+Ghi LOGIN / FAILED trong các trường hợp:
 
-```typescript
-import { AuditLogService } from '../audit-log/audit-log.service';
-```
+- Sai mật khẩu.
+- Tài khoản không tồn tại.
+- Tài khoản bị vô hiệu hóa.
 
-Dependency cần bổ sung:
+Nếu tài khoản không tồn tại, user_id được lưu NULL và username là tên đăng nhập được gửi đến.
 
-```typescript
-private readonly auditLogService: AuditLogService
-```
+### 5.3. Đăng xuất thành công
 
-### 5.3. Đăng nhập thành công
+- JwtAuthGuard xác thực Token và phiên.
+- Cập nhật revoked_at trong auth_sessions.
+- Sử dụng RETURNING id để xác nhận phiên thực sự được cập nhật.
+- Ghi LOGOUT / SUCCESS khi có phiên được thu hồi.
 
-Ví dụ gọi Service sau khi xác thực thành công:
+Cơ chế này hạn chế ghi trùng nhật ký đăng xuất khi nhiều Request đồng thời thu hồi cùng một phiên.
 
-```typescript
-await this.auditLogService.record({
-  userId: user.id,
-  username: user.username,
-  action: 'LOGIN',
-  result: 'SUCCESS',
-  ipAddress: ipAddress,
-});
-```
+### 5.4. Chính sách xử lý lỗi ghi nhật ký
 
-### 5.4. Đăng nhập thất bại
+AuditLogService truyền lỗi Database cho bên gọi.
 
-Ví dụ trường hợp tài khoản không tồn tại:
+AuthService hiện sử dụng fail-open tạm thời: bắt lỗi ghi nhật ký, ghi thông báo lỗi vào Backend Logger và giữ nguyên hành vi Authentication.
 
-```typescript
-await this.auditLogService.record({
-  userId: null,
-  username: username,
-  action: 'LOGIN',
-  result: 'FAILED',
-  ipAddress: ipAddress,
-});
-```
+Chính sách này cần được nhóm xác nhận trước khi nghiệm thu chính thức.
 
-Nếu xác định được tài khoản nhưng xác thực thất bại, có thể truyền ID và username của tài khoản tương ứng theo quy tắc nghiệp vụ đã thống nhất.
+## 6. API liên quan
 
-### 5.5. Đăng xuất thành công
+| Method | Endpoint | Authentication |
+|---|---|---|
+| GET | /api/health | Không yêu cầu |
+| POST | /api/auth/login | Không yêu cầu |
+| POST | /api/auth/logout | Bearer Token |
+| GET | /api/vu-viec | Bearer Token |
 
-```typescript
-await this.auditLogService.record({
-  userId: user.id,
-  username: user.username,
-  action: 'LOGOUT',
-  result: 'SUCCESS',
-  ipAddress: ipAddress,
-});
-```
+Không bổ sung API ghi nhật ký công khai.
 
-Các đoạn code trên là ví dụ tích hợp. Tên biến và vị trí gọi Service cần điều chỉnh theo mã nguồn thực tế của G13-036.
+### 6.1. Swagger UI
 
-## 6. Kết quả kiểm thử
+Swagger UI được sử dụng để tra cứu tài liệu API và
+thực hiện HTTP Request trực tiếp trên trình duyệt.
 
-Ngày kiểm thử: 25/11/2026.
+- Đường dẫn Swagger: `/api/docs`
+- Môi trường mặc định: `http://localhost:5000/api/docs`
+- Môi trường kiểm thử ngày 26/11/2026:
+  `http://127.0.0.1:60559/api/docs`
+
+Cổng 60559 là cổng tạm do Docker cấp trong môi trường
+kiểm thử riêng, không phải cổng triển khai cố định.
+
+Kết quả kiểm tra Swagger:
+
+- Hiển thị đầy đủ 6 Endpoint của Backend hiện tại.
+- Hiển thị cơ chế Bearer Token Authentication.
+- Kiểm thử GET /api/health trực tiếp trên Swagger: PASS.
+- Kiểm thử nghiệp vụ Authentication: Postman 8/8 PASS
+  và đối chiếu PostgreSQL thành công.
+
+Chưa thực hiện lại toàn bộ Test Case Authentication
+trên Swagger UI.
+
+
+## 7. Môi trường kiểm thử
+
+- Docker Desktop / Docker Engine 29.5.3
+- Node.js 22.23.5
+- npm 10.9.9
+- PostgreSQL 16
+- NestJS
+- Postman
+- Database kiểm thử: g13_038_test
+- Database User: audit_test
+
+Môi trường kiểm thử sử dụng Docker Network riêng và PostgreSQL tạm thời trên tmpfs.
+
+Dependencies được cài bằng npm ci theo package-lock.json.
+
+Mật khẩu tài khoản mẫu được thiết lập riêng trong Database kiểm thử, không thay đổi Database chính, Schema hoặc file Seed.
+
+## 8. Kết quả kiểm thử tự động
 
 | Nội dung | Kết quả |
 |---|---|
@@ -125,11 +167,54 @@ Ngày kiểm thử: 25/11/2026.
 | Result CHECK Constraint | PASS |
 | NestJS Dependency Injection | PASS |
 
-Kiểm thử được thực hiện bằng Docker, Node.js 22 và PostgreSQL 16 với schema G13-034 trong môi trường Database thử nghiệm độc lập.
+## 9. Kết quả kiểm thử Postman
 
-Không sử dụng hoặc thay đổi dữ liệu của Database chính.
+Ngày kiểm thử: 26/11/2026.
 
-## 7. Các lệnh kiểm thử
+| Test Case | Nội dung | HTTP kỳ vọng | HTTP thực tế | Kết quả |
+|---|---|---|---|---|
+| TC00 | Health Check | 200 | 200 | PASS |
+| TC01 | Đăng nhập thành công | 200 | 200 | PASS |
+| TC02 | Sai mật khẩu | 401 | 401 | PASS |
+| TC03 | Tài khoản không tồn tại | 401 | 401 | PASS |
+| TC04 | Tài khoản bị vô hiệu hóa | 401 | 401 | PASS |
+| TC05A | Truy cập trước đăng xuất | 200 | 200 | PASS |
+| TC05 | Đăng xuất thành công | 200 | 200 | PASS |
+| TC06 | Truy cập sau đăng xuất | 401 | 401 | PASS |
+
+TC06 được kiểm thử lại sau khi thực hiện đúng Request đăng xuất.
+
+## 10. Đối chiếu dữ liệu PostgreSQL
+
+| Action | Result | Ban đầu | Sau Postman | Tăng |
+|---|---|---:|---:|---:|
+| CREATE | SUCCESS | 1 | 1 | 0 |
+| LOGIN | SUCCESS | 2 | 3 | 1 |
+| LOGIN | FAILED | 3 | 6 | 3 |
+| LOGOUT | SUCCESS | 1 | 2 | 1 |
+| Tổng | | 7 | 12 | 5 |
+
+Kết quả xác nhận:
+
+- Ghi đủ 5 bản ghi nhật ký mới theo các sự kiện Authentication.
+- Tài khoản không tồn tại có user_id bằng NULL.
+- Tài khoản đã xác định có user_id tương ứng.
+- Ghi nhận địa chỉ IP và thời gian thực hiện.
+- Không phát hiện bản ghi thừa hoặc thiếu trong các lượt kiểm thử.
+
+### Kiểm tra phiên đăng nhập
+
+Tài khoản admin:
+
+- Thời gian đăng nhập: 23:04:46 ngày 26/11/2026.
+- Thời gian đăng xuất: 23:12:13 ngày 26/11/2026.
+- revoked_at đã được cập nhật.
+- Token hoạt động trước đăng xuất.
+- Token bị từ chối sau đăng xuất.
+
+Thời gian trên được biểu diễn theo UTC+7.
+
+## 11. Lệnh kiểm thử
 
 Thực hiện trong môi trường Backend đã cài đặt dependencies phù hợp:
 
@@ -139,35 +224,53 @@ npm run build
 node --test audit-log.test.cjs
 ```
 
-Integration Test:
+Kiểm thử tích hợp:
 
 ```bash
 node --test audit-log.integration.test.cjs
 ```
 
-Integration Test yêu cầu PostgreSQL thử nghiệm riêng, sử dụng schema và seed của G13-034, Database `g13_038_test`, tài khoản `audit_test` và các biến môi trường Backend phù hợp.
+Integration Test yêu cầu Database kiểm thử riêng, schema và seed tương thích, cùng các biến môi trường Backend và JWT_SECRET phù hợp.
 
 Không chạy Integration Test trên Database chính.
 
-## 8. Các vấn đề cần thống nhất
+## 12. Minh chứng kiểm thử
 
-- Cơ chế Authentication: JWT hoặc Session.
-- Vị trí ghi nhận nhật ký đăng nhập và đăng xuất.
-- Xử lý khi tài khoản bị vô hiệu hóa.
-- Xử lý username vượt quá 50 ký tự.
-- Phạm vi ghi nhận yêu cầu đăng nhập không hợp lệ.
-- Nguồn lấy địa chỉ IP.
-- Chính sách xử lý khi ghi nhật ký thất bại.
-- Cơ chế tránh ghi trùng nhật ký.
+Minh chứng được lưu riêng tại thư mục:
 
-Hiện tại AuditLogService truyền lỗi Database cho bên gọi, chưa quyết định chính sách xử lý lỗi ở Authentication.
+G13-038-Test-Evidence-20261126
 
-## 9. Công việc còn lại
+Bao gồm:
 
-- Xác nhận schema chính thức của G13-034.
-- Tích hợp AuditLogService với G13-036.
-- Kiểm thử đăng nhập, đăng xuất thông qua API thực tế.
-- Kiểm tra tính chính xác và đầy đủ của nhật ký.
-- Review và bàn giao mã nguồn.
+- PostgreSQL-Test-Result.txt
+- TC00-Health-Check.png
+- TC01-Login-Success.png
+- TC02-Wrong-Password.png
+- TC03-Unknown-Account.png
+- TC04-Disabled-Account.png
+- TC05A-Access-Before-Logout.png
+- TC05-Logout-Success.png
+- TC06-Access-After-Logout.png
+- Swagger-Health-Check.png
 
-Chưa xác nhận hoàn thành toàn bộ G13-038 cho đến khi chức năng được tích hợp và kiểm thử nghiệp vụ thực tế.
+Cần loại bỏ mật khẩu và Token khỏi minh chứng trước khi chia sẻ.
+
+## 13. Giới hạn và vấn đề cần thống nhất
+
+- Chính sách fail-open chưa được nhóm xác nhận.
+- Ghi phiên và ghi nhật ký chưa sử dụng chung Transaction.
+- Request không hợp lệ bị DTO từ chối trước AuthService chưa được ghi nhật ký.
+- Logout bị JwtAuthGuard từ chối chưa được ghi LOGOUT FAILED.
+- Chưa kiểm thử riêng trường hợp username vượt quá giới hạn hoặc Request đồng thời.
+- IP ghi nhận là IP Backend nhận được; cần đánh giá cấu hình Proxy khi triển khai.
+- npm ci báo 3 lỗ hổng dependencies mức Moderate; chưa tự ý thay đổi phiên bản thư viện.
+- Chưa triển khai API đọc nhật ký hoặc giao diện Dashboard vì chưa xác nhận thuộc phạm vi G13-038.
+- Chưa thống nhất nhánh đích Pull Request.
+
+## 14. Kết luận
+
+Đã hoàn thành triển khai AuditLogService, tích hợp Authentication và kiểm thử nghiệp vụ đăng nhập, đăng xuất trong môi trường độc lập.
+
+Kết quả: Unit Test 5/5 PASS, Integration Test 1/1 PASS và Postman 8/8 PASS.
+
+Mã nguồn sẵn sàng để gửi nhóm review. Nghiệm thu chính thức và merge thực hiện theo quy trình của nhóm.
