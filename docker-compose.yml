@@ -14,6 +14,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./database/init:/docker-entrypoint-initdb.d:ro
+      - ./database/migrations:/migrations:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:?chưa có file .env - hãy chạy lệnh cp .env.example .env} -d ${DB_NAME:?chưa có file .env - hãy chạy lệnh cp .env.example .env}"]
       interval: 5s
@@ -46,6 +47,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:?chưa có file .env - hãy chạy lệnh cp .env.example .env}
       DB_NAME: ${DB_NAME:?chưa có file .env - hãy chạy lệnh cp .env.example .env}
       CORS_ORIGIN: http://localhost:${FRONTEND_PORT:?chưa có file .env - hãy chạy lệnh cp .env.example .env}
+      JWT_SECRET: ${JWT_SECRET:?chưa có JWT_SECRET trong file .env}
     ports:
       - "${BACKEND_PORT:?chưa có file .env - hãy chạy lệnh cp .env.example .env}:5000"
     volumes:

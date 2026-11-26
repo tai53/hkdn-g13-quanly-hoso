@@ -22,6 +22,7 @@ async function bootstrap() {
     .setTitle('Quản lý vụ việc và hồ sơ nghiệp vụ')
     .setDescription('REST API của hệ thống')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
   SwaggerModule.setup('api/docs', app, SwaggerModule.createDocument(app, swaggerConfig));
 
