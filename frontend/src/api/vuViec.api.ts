@@ -1,11 +1,41 @@
-import api from './client';
-import type { CreateVuViecInput, HealthResponse, VuViec, VuViecChiTiet, VuViecTomTat } from '../types/vu-viec';
 
-// 503 nghĩa là API vẫn chạy nhưng mất kết nối DB, nên vẫn đọc nội dung thay vì coi là lỗi.
+import api from './client';
+
+import type {
+  CreateVuViecInput,
+  HealthResponse,
+  VuViec,
+  VuViecChiTiet,
+  VuViecTomTat,
+} from '../types/vu-viec';
+
+/** Kiểm tra kết nối Backend và Database. */
 export const getHealth = () =>
   api
-    .get<HealthResponse>('/health', { validateStatus: (s) => s === 200 || s === 503 })
-    .then((r) => r.data);
-export const getVuViecList = () => api.get<VuViecTomTat[]>('/vu-viec').then((r) => r.data);
-export const getVuViec = (id: number) => api.get<VuViecChiTiet>(`/vu-viec/${id}`).then((r) => r.data);
-export const createVuViec = (data: CreateVuViecInput) => api.post<VuViec>('/vu-viec', data).then((r) => r.data);
+    .get<HealthResponse>('/health', {
+      validateStatus: (status) =>
+        status === 200 || status === 503,
+    })
+    .then((response) => response.data);
+
+/** Lấy danh sách vụ việc. */
+export const getVuViecList = () =>
+  api
+    .get<VuViecTomTat[]>('/vu-viec')
+    .then((response) => response.data);
+
+/** Lấy chi tiết vụ việc theo UUID hoặc mã hồ sơ. */
+export const getVuViec = (id: string) =>
+  api
+    .get<VuViecChiTiet>(
+      `/vu-viec/${encodeURIComponent(id)}`,
+    )
+    .then((response) => response.data);
+
+/** Tạo vụ việc mới. */
+export const createVuViec = (
+  data: CreateVuViecInput,
+) =>
+  api
+    .post<VuViec>('/vu-viec', data)
+    .then((response) => response.data);
